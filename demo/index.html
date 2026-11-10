@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>freepi-bots demo</title>
+    <link rel="stylesheet" href="../dist/styles.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        font: 14px/1.4 system-ui, sans-serif;
+        background: var(--fpb-page);
+        color: var(--fpb-fg);
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 15px;
+        margin: 32px 0 12px;
+      }
+      p {
+        margin: 0 0 12px;
+        opacity: 0.7;
+      }
+      button,
+      select {
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        border: 1px solid color-mix(in srgb, var(--fpb-fg) 30%, transparent);
+        border-radius: 8px;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      td,
+      th {
+        padding: 4px 6px;
+        text-align: center;
+        font-weight: 400;
+        font-size: 11px;
+      }
+      th[scope="row"] {
+        text-align: right;
+      }
+      .stage {
+        display: flex;
+        gap: 32px;
+        align-items: center;
+        padding: 24px;
+        min-height: 200px;
+      }
+      #scene {
+        position: relative;
+        height: 520px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+      }
+      #card {
+        position: relative;
+        padding: 28px 40px;
+        border-radius: 16px;
+        background: var(--fpb-page);
+        border: 1px solid color-mix(in srgb, var(--fpb-fg) 20%, transparent);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>freepi-bots</h1>
+    <p>Built from <code>../dist</code>. Serve the repo root over HTTP, for example <code>python3 -m http.server 4799</code>, then open <code>/demo/</code>.</p>
+    <div class="bar">
+      <button id="theme" type="button">Theme: auto</button>
+    </div>
+
+    <h2>Every shape and colour</h2>
+    <table id="grid"></table>
+
+    <h2>Clips, states and eyes</h2>
+    <div class="bar" id="controls"></div>
+    <div class="stage"><div id="hero"></div><div id="hero-small"></div></div>
+
+    <h2>Scene</h2>
+    <div id="scene"><div id="card"><strong>Sign in</strong><br />A card the bots keep out of</div></div>
+
+    <script type="module">
+      import { BOT_CLIPS, BOT_EYE_STYLES, BOT_STATES, COLORS, SHAPE_KEYS } from "../dist/index.js";
+      import { mountBot, mountScene } from "../dist/vanilla.js";
+
+      // Grid: shapes down, colours across.
+      const grid = document.getElementById("grid");
+      const head = grid.insertRow();
+      head.insertCell().outerHTML = "<th></th>";
+      for (const c of COLORS) head.insertCell().outerHTML = `<th scope="col">${c.id}</th>`;
+      for (const shape of SHAPE_KEYS) {
+        const row = grid.insertRow();
+        row.insertCell().outerHTML = `<th scope="row">${shape}</th>`;
+        for (const c of COLORS) {
+          const cell = row.insertCell();
+          const el = document.createElement("div");
+          cell.append(el);
+          mountBot(el, { shape, color: c.id, identity: shape + c.id, size: 40 });
+        }
+      }
+
+      // Hero bot: pick shape and colour, play clips, switch state and eyes.
+      const controls = document.getElementById("controls");
+      const select = (id, values) => {
+        const s = document.createElement("select");
+        s.id = id;
+        for (const v of values) s.append(new Option(v, v));
+        controls.append(s);
+        return s;
+      };
+      const shapeSel = select("shape", SHAPE_KEYS);
+      shapeSel.value = "heart";
+      const colorSel = select("color", COLORS.map((c) => c.id));
+      colorSel.value = "blue";
+      const stateSel = select("state", BOT_STATES);
+      const eyeSel = select("eyes", BOT_EYE_STYLES);
+      const hero = mountBot(document.getElementById("hero"), { shape: "heart", color: "blue", size: 180 });
+      const small = mountBot(document.getElementById("hero-small"), { shape: "heart", color: "blue", size: 48 });
+      const redraw = () => {
+        const o = { shape: shapeSel.value, color: colorSel.value, state: stateSel.value, eyeStyle: eyeSel.value };
+        hero.update({ ...o, size: 180 });
+        small.update({ ...o, size: 48 });
+      };
+      for (const s of [shapeSel, colorSel, stateSel, eyeSel]) s.addEventListener("change", redraw);
+      for (const clip of BOT_CLIPS) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = clip;
+        b.dataset.clip = clip;
+        b.addEventListener("click", () => {
+          hero.play(clip);
+          small.play(clip);
+        });
+        controls.append(b);
+      }
+
+      // Scene, keeping out of the card.
+      mountScene(document.getElementById("scene"), { variant: "wide", keepOut: [document.getElementById("card")] });
+
+      // Theme: auto follows the system; the button forces light or dark.
+      const modes = [undefined, "light", "dark"];
+      let mode = 0;
+      document.getElementById("theme").addEventListener("click", (e) => {
+        mode = (mode + 1) % modes.length;
+        const m = modes[mode];
+        if (m) document.documentElement.dataset.theme = m;
+        else delete document.documentElement.dataset.theme;
+        e.target.textContent = `Theme: ${m ?? "auto"}`;
+      });
+    </script>
+  </body>
+</html>
