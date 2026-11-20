@@ -5,12 +5,11 @@ eyes, 11 colours, 12 motion clips, working and loading states, and the "explodin
 It ships plain JavaScript (`freepi-bots/vanilla`) and React components (`freepi-bots/react`) built
 on the same code.
 
-The package is private and UNLICENSED. It is not published to npm and does not depend on any
-`@rakazo/*` package.
+The package is MIT licensed (see LICENSE). It is not published to npm.
 
 ## Install
 
-Install from GitHub (the repo is private, so your git must be able to read it):
+Install from GitHub:
 
 ```sh
 pnpm add github:dennisonbertram/freepi-bots
