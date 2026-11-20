@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "FreePi flat bot characters: 23 shapes, eyes, motion clips and the sign-in scene, as plain JS and React.",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "sideEffects": [
     "*.css"
